@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energy Dashboard — Baeli Energia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0d1117;--sur:#161b22;--brd:#30363d;--txt:#e6edf3;--mut:#8b949e;
+  --pun:#d4763a;--psv:#2b7ecb;--oil:#c0392b;--ttf:#8e44ad;--igi:#16a085;--co2:#27ae60;--fx:#c7a800;--disp:#e74c3c;
+  --grn:#3fb950;--red:#f85149;--card:#1c2230;--r:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;}
+header{background:linear-gradient(135deg,#161b22,#1c2230);border-bottom:1px solid var(--brd);padding:12px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.logo{font-size:19px;font-weight:700;color:var(--pun);letter-spacing:.8px;}
+.sub{font-size:11px;color:var(--mut);margin-top:2px;}
+.hbadge{margin-left:auto;background:#238636;color:#fff;padding:3px 11px;border-radius:20px;font-size:12px;font-weight:600;}
+.tickers{display:flex;gap:8px;flex-wrap:wrap;padding:9px 18px;background:rgba(0,0,0,.3);border-bottom:1px solid var(--brd);}
+.tick{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.04);border:1px solid var(--brd);border-radius:7px;padding:5px 11px;font-size:12px;}
+.tick-dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.3);}}
+.tick-label{color:var(--mut);font-size:11px;}
+.tick-val{font-weight:700;font-size:13px;}
+.wrap{max-width:1480px;margin:0 auto;padding:14px;}
+.cards-row{display:grid;gap:8px;margin-bottom:10px;}
+.cr4{grid-template-columns:repeat(4,minmax(0,1fr));}
+.cr7{grid-template-columns:repeat(7,minmax(0,1fr));}
+@media(max-width:900px){.cr4,.cr7{grid-template-columns:repeat(2,minmax(0,1fr));}}
+.card{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:11px 14px;position:relative;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;}
+.cp::before{background:var(--pun);} .cg::before{background:var(--psv);}
+.co::before{background:var(--oil);} .ct::before{background:var(--ttf);}
+.ci::before{background:var(--igi);} .cc::before{background:var(--co2);} .cf::before{background:var(--fx);}
+.cd::before{background:var(--disp);}
+.clb{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;font-weight:600;}
+.cv{font-size:19px;font-weight:700;margin-bottom:3px;font-variant-numeric:tabular-nums;}
+.vp{color:var(--pun);} .vg{color:var(--psv);} .vo{color:var(--oil);}
+.vt{color:var(--ttf);} .vi{color:var(--igi);} .vc{color:var(--co2);} .vf{color:var(--fx);} .vd{color:var(--disp);}
+.cu{font-size:10.5px;color:var(--mut);}
+.ctrls,.ftrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px;padding:8px 12px;background:var(--card);border:1px solid var(--brd);border-radius:var(--r);}
+.ctrls{margin-top:14px;}
+.clbl{font-size:11.5px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-right:4px;}
+.ctrls button,.ftrow button{background:transparent;border:1px solid var(--brd);color:var(--mut);padding:5px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.ctrls button:hover,.ftrow button:hover{border-color:var(--pun);color:var(--txt);}
+.ctrls button.on{background:var(--pun);border-color:var(--pun);color:#fff;}
+.csvb{margin-left:auto;background:#238636!important;border-color:#238636!important;color:#fff!important;}
+.ftrow button.f0.on{background:var(--pun);border-color:var(--pun);color:#fff;}
+.ftrow button.f1.on{background:#e8a34f;border-color:#e8a34f;color:#000;}
+.ftrow button.f2.on{background:#f5c788;border-color:#f5c788;color:#000;}
+.ftrow button.f3.on{background:#f9dfb9;border-color:#f9dfb9;color:#000;}
+.ftrow button.fp.on{background:var(--psv);border-color:var(--psv);color:#fff;}
+.ftrow button.fb.on{background:var(--oil);border-color:var(--oil);color:#fff;}
+.ftrow button.ft.on{background:var(--ttf);border-color:var(--ttf);color:#fff;}
+.ftrow button.fi.on{background:var(--igi);border-color:var(--igi);color:#fff;}
+.ftrow button.fc.on{background:var(--co2);border-color:var(--co2);color:#fff;}
+.ftrow button.ff.on{background:var(--fx);border-color:var(--fx);color:#000;}
+.ftrow button.fd.on{background:var(--disp);border-color:var(--disp);color:#fff;}
+.charts3{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:12px;}
+@media(max-width:1100px){.charts3{grid-template-columns:1fr;}}
+.cb{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:11px 13px;}
+.ct-title{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--txt);}
+.chbox{position:relative;height:300px;}.chbox.tall{height:360px;}
+.tabbar{display:flex;gap:3px;margin-bottom:8px;border-bottom:1px solid var(--brd);flex-wrap:wrap;}
+.tabb{background:transparent;border:none;color:var(--mut);padding:8px 14px;cursor:pointer;font-size:12.5px;font-weight:600;border-bottom:2px solid transparent;}
+.tabb:hover{color:var(--txt);} .tabb.on{color:var(--pun);border-bottom-color:var(--pun);}
+.tpanel{display:none;} .tpanel.on{display:block;}
+.tab-wrap{max-height:500px;overflow:auto;border:1px solid var(--brd);border-radius:var(--r);}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{background:#141926;color:var(--mut);font-weight:600;font-size:10.5px;text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:2;white-space:nowrap;}
+tbody td{padding:7px 10px;border-bottom:1px solid rgba(48,54,61,.5);font-variant-numeric:tabular-nums;}
+tbody td.num{text-align:right;}
+tbody tr:hover td{background:rgba(212,118,58,.05);}
+tr.rx td{background:rgba(248,81,73,.14)!important;font-weight:700;} tr.rx td:first-child{border-left:3px solid var(--red);}
+tr.rn td{background:rgba(63,185,80,.14)!important;font-weight:700;} tr.rn td:first-child{border-left:3px solid var(--grn);}
+tr.rpartial td{color:var(--pun);font-style:italic;} tr.rpartial td:first-child{border-left:3px solid var(--pun);}
+.legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:11px;color:var(--mut);}
+.lg{display:inline-flex;align-items:center;gap:5px;} .sw{width:12px;height:12px;border-radius:2px;}
+.sw.sx{background:rgba(248,81,73,.4);} .sw.sn{background:rgba(63,185,80,.4);} .sw.sp{background:rgba(212,118,58,.35);}
+footer{text-align:center;padding:14px;font-size:11px;color:var(--mut);border-top:1px solid var(--brd);margin-top:16px;}
+footer a{color:var(--pun);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">⚡ Energy Dashboard</div>
+    <div class="sub">Baeli Energia · COGITHO SAS — PUN · PSV · Brent · TTF · IGI · CO₂ · EUR/USD · DISP</div>
+  </div>
+  <span class="hbadge">Aggiornato: 1 mag 2026</span>
+</header>
+
+<div class="tickers">
+  <div class="tick"><span class="tick-dot" style="background:var(--pun)"></span><span class="tick-label">PUN</span><span class="tick-val" id="tkPUN">—</span></div>
+  <div class="tick"><span class="tick-dot" style="background:var(--psv)"></span><span class="tick-label">PSV</span><span class="tick-val" id="tkPSV">—</span></div>
+  <div class="tick"><span class="tick-dot" style="background:var(--oil)"></span><span class="tick-label">Brent live</span><span class="tick-val" id="tkBrent">—</span></div>
+  <div class="tick"><span class="tick-dot" style="background:var(--ttf)"></span><span class="tick-label">TTF</span><span class="tick-val" id="tkTTF">—</span></div>
+  <div class="tick"><span class="tick-dot" style="background:var(--co2)"></span><span class="tick-label">CO₂</span><span class="tick-val" id="tkCO2">—</span></div>
+  <div class="tick"><span class="tick-dot" style="background:var(--fx)"></span><span class="tick-label">EUR/USD live</span><span class="tick-val" id="tkFX">—</span></div>
+  <div class="tick"><span class="tick-dot" style="background:var(--disp)"></span><span class="tick-label">DISP</span><span class="tick-val" id="tkDISP">—</span></div>
+</div>
+
+<div class="wrap">
+  <div class="cards-row cr4">
+    <div class="card cp"><div class="clb">PUN — Ultimo</div><div class="cv vp" id="pL">—</div><div class="cu" id="pLm">—</div></div>
+    <div class="card cp"><div class="clb">PUN — Massimo</div><div class="cv vp" id="pX">—</div><div class="cu" id="pXm">—</div></div>
+    <div class="card cp"><div class="clb">PUN — Minimo</div><div class="cv vp" id="pN">—</div><div class="cu" id="pNm">—</div></div>
+    <div class="card cp"><div class="clb">PUN — Media</div><div class="cv vp" id="pA">—</div><div class="cu">€/MWh · escl. ⚡</div></div>
+  </div>
+  <div class="cards-row cr4">
+    <div class="card cg"><div class="clb">PSV — Ultimo</div><div class="cv vg" id="gL">—</div><div class="cu" id="gLm">—</div></div>
+    <div class="card cg"><div class="clb">PSV — Massimo</div><div class="cv vg" id="gX">—</div><div class="cu" id="gXm">—</div></div>
+    <div class="card cg"><div class="clb">PSV — Minimo</div><div class="cv vg" id="gN">—</div><div class="cu" id="gNm">—</div></div>
+    <div class="card cg"><div class="clb">PSV — Media</div><div class="cv vg" id="gA">—</div><div class="cu">€/Smc · escl. ⚡</div></div>
+  </div>
+  <div class="cards-row cr7">
+    <div class="card co"><div class="clb">Brent</div><div class="cv vo" id="bL">—</div><div class="cu">USD/bbl</div></div>
+    <div class="card ct"><div class="clb">TTF</div><div class="cv vt" id="tL">—</div><div class="cu">€/MWh</div></div>
+    <div class="card ci"><div class="clb">IGI</div><div class="cv vi" id="iL">—</div><div class="cu">€/MWh</div></div>
+    <div class="card cc"><div class="clb">CO₂</div><div class="cv vc" id="cL">—</div><div class="cu">€/t</div></div>
+    <div class="card cf"><div class="clb">EUR/USD</div><div class="cv vf" id="fL">—</div><div class="cu">tasso</div></div>
+    <div class="card cd"><div class="clb">DISP</div><div class="cv vd" id="dL">—</div><div class="cu" id="dLm">€/MWh</div></div>
+    <div class="card cp"><div class="clb">PUN F0 €/kWh</div><div class="cv vp" id="pK">—</div><div class="cu">parziale ⚡</div></div>
+  </div>
+
+  <div class="ctrls">
+    <span class="clbl">Periodo:</span>
+    <button class="on" data-p="all">Tutto</button>
+    <button data-p="12m">12m</button><button data-p="24m">24m</button>
+    <button data-p="2022">2022</button><button data-p="2023">2023</button>
+    <button data-p="2024">2024</button><button data-p="2025">2025</button><button data-p="2026">2026</button>
+    <button class="csvb" id="csvBtn">↓ CSV</button>
+  </div>
+  <div class="ftrow">
+    <span class="clbl">Serie:</span>
+    <button class="f0 on" data-f="f0">PUN F0</button>
+    <button class="f1" data-f="f1">F1</button><button class="f2" data-f="f2">F2</button><button class="f3" data-f="f3">F3</button>
+    <button class="fp on" data-f="psv">PSV</button>
+    <button class="fb on" data-f="brent">Brent</button>
+    <button class="ft" data-f="ttf">TTF</button><button class="fi" data-f="igi">IGI</button>
+    <button class="fc" data-f="co2">CO₂</button><button class="ff" data-f="fx">EUR/USD</button>
+    <button class="fd" data-f="disp">DISP</button>
+  </div>
+
+  <div class="charts3">
+    <div class="cb"><div class="ct-title">📈 Andamento mensile multi-indice</div><div class="chbox tall"><canvas id="chMain"></canvas></div></div>
+    <div class="cb"><div class="ct-title">📊 Medie annuali PUN · PSV · DISP</div><div class="chbox tall"><canvas id="chBar"></canvas></div></div>
+  </div>
+  <div class="charts3" style="grid-template-columns:1fr 1fr;">
+    <div class="cb"><div class="ct-title">🛢 Brent — USD/bbl</div><div class="chbox"><canvas id="chBrent"></canvas></div></div>
+    <div class="cb"><div class="ct-title">🔥 TTF + CO₂</div><div class="chbox"><canvas id="chTTF"></canvas></div></div>
+  </div>
+  <div class="charts3" style="grid-template-columns:1fr;">
+    <div class="cb"><div class="ct-title">⚙️ Dispacciamento totale medio (€/MWh profilo piatto)</div><div class="chbox"><canvas id="chDISP"></canvas></div></div>
+  </div>
+
+  <div class="cb" style="margin-bottom:12px;">
+    <div class="ct-title">📋 Dati dettagliati</div>
+    <div class="tabbar">
+      <button class="tabb on" data-t="tAll">PUN + PSV</button>
+      <button class="tabb" data-t="tPUN">Solo PUN</button>
+      <button class="tabb" data-t="tPSV">Solo PSV</button>
+      <button class="tabb" data-t="tOther">Altri indici</button>
+      <button class="tabb" data-t="tDISP">Dispacciamento</button>
+    </div>
+    <div id="tAll" class="tpanel on"><div class="tab-wrap"><table><thead><tr><th>Mese</th><th class="num">PUN €/kWh</th><th class="num">PUN €/MWh</th><th class="num">PSV €/Smc</th><th class="num">PSV €/MWh</th><th class="num">Δ% PUN</th><th class="num">Δ% PSV</th></tr></thead><tbody id="tbAll"></tbody></table></div></div>
+    <div id="tPUN" class="tpanel"><div class="tab-wrap"><table><thead><tr><th>Mese</th><th class="num">F0 €/kWh</th><th class="num">F1</th><th class="num">F2</th><th class="num">F3</th><th class="num">€/MWh</th><th class="num">Δ%</th></tr></thead><tbody id="tbPUN"></tbody></table></div></div>
+    <div id="tPSV" class="tpanel"><div class="tab-wrap"><table><thead><tr><th>Mese</th><th class="num">€/Smc</th><th class="num">€/MWh</th><th class="num">Δ €/Smc</th><th class="num">Δ%</th></tr></thead><tbody id="tbPSV"></tbody></table></div></div>
+    <div id="tOther" class="tpanel"><div class="tab-wrap"><table><thead><tr><th>Mese</th><th class="num">Brent</th><th class="num">TTF</th><th class="num">IGI</th><th class="num">CO₂</th><th class="num">EUR/USD</th></tr></thead><tbody id="tbOther"></tbody></table></div></div>
+    <div id="tDISP" class="tpanel"><div class="tab-wrap"><table><thead><tr><th>Mese</th><th class="num">DISP €/MWh</th><th class="num">CM peak</th><th class="num">CM off-peak</th><th class="num">Δ%</th></tr></thead><tbody id="tbDISP"></tbody></table></div></div>
+    <div class="legend-row">
+      <span class="lg"><span class="sw sx"></span> Massimo</span>
+      <span class="lg"><span class="sw sn"></span> Minimo</span>
+      <span class="lg"><span class="sw sp"></span> ⚡ parziale</span>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>Baeli Energia</strong> — COGITHO SAS · P.IVA 05562760875 ·
+  <a href="https://baeli.it" target="_blank">baeli.it</a> · 🤖 Auto-update via GitHub Actions ·
+  Fonti: GME · SNAM · ARERA · Terna · Yahoo · Frankfurter
+</footer>
+
+<script>
+// === DATASET INIETTATO DA update_dashboard.py ===
+const D = [["Gen 2022", 224.5, 257.19, 242.35, 196.39, 0.9104, false, 83.5, 80.2, 78.0, 84.1, 1.1328, 4.2, 39.799, 1.296], ["Feb 2022", 211.69, 224.88, 225.68, 193.65, 0.862, false, 95.7, 77.3, 75.2, 90.5, 1.1327, 5.8, 39.799, 1.296], ["Mar 2022", 308.07, 320.08, 329.12, 286.19, 1.34, false, 117.9, 128.4, 125.8, 78.9, 1.1013, 4.9, 39.799, 1.296], ["Apr 2022", 245.97, 256.23, 266.58, 228.86, 1.0602, false, 104.6, 103.9, 101.2, 82.9, 1.0819, 4.1, 39.799, 1.296], ["Mag 2022", 230.06, 237.21, 253.52, 212.33, 0.9506, false, 112.6, 95.8, 93.1, 85.7, 1.0556, 3.85, 39.799, 1.296], ["Giu 2022", 271.31, 297.17, 293.31, 241.03, 1.098, false, 117.0, 120.3, 117.5, 85.4, 1.0566, 3.95, 39.799, 1.296], ["Lug 2022", 441.65, 495.24, 473.26, 386.07, 1.8296, false, 104.0, 175.7, 172.5, 80.9, 1.0198, 6.2, 39.799, 1.296], ["Ago 2022", 543.15, 553.96, 602.78, 503.55, 2.471465, false, 99.6, 235.2, 232.0, 89.1, 1.0123, 4.1, 39.799, 1.296], ["Set 2022", 429.92, 460.24, 471.34, 382.07, 1.941062, false, 91.6, 187.6, 184.2, 72.7, 0.99, 4.0, 39.799, 1.296], ["Ott 2022", 211.5, 235.87, 242.14, 177.15, 0.835182, false, 92.8, 120.3, 118.5, 72.4, 0.983, 3.9, 39.799, 1.296], ["Nov 2022", 224.51, 272.35, 240.71, 181.43, 0.975849, false, 87.9, 115.2, 113.0, 74.8, 1.0205, 4.3, 39.799, 1.296], ["Dic 2022", 294.91, 360.73, 309.96, 244.94, 1.247659, false, 79.9, 132.6, 130.5, 85.1, 1.0605, 5.4, 39.799, 1.296], ["Gen 2023", 174.49, 196.24, 184.24, 155.1, 0.731604, false, 82.2, 68.9, 67.0, 82.6, 1.078, 6.95, 46.62, 1.51], ["Feb 2023", 161.07, 174.33, 172.89, 144.22, 0.608549, false, 82.6, 54.8, 53.2, 84.0, 1.0722, 8.2, 46.62, 1.51], ["Mar 2023", 136.38, 139.78, 151.95, 124.66, 0.498408, false, 77.3, 47.1, 45.8, 87.5, 1.0702, 5.8, 46.62, 1.51], ["Apr 2023", 134.97, 135.55, 152.05, 126.4, 0.4753, false, 83.4, 41.9, 40.5, 89.9, 1.0968, 4.95, 46.62, 1.51], ["Mag 2023", 105.73, 109.99, 119.81, 95.11, 0.3634, false, 75.7, 31.1, 30.0, 86.0, 1.0874, 4.6, 46.62, 1.51], ["Giu 2023", 105.34, 108.2, 117.96, 96.61, 0.354598, false, 74.9, 33.5, 32.2, 83.8, 1.0876, 4.75, 46.62, 1.51], ["Lug 2023", 112.09, 114.91, 122.32, 104.34, 0.33617, false, 80.1, 29.5, 28.4, 85.8, 1.1121, 7.85, 46.62, 1.51], ["Ago 2023", 111.89, 110.26, 128.12, 104.48, 0.35239, false, 86.2, 33.3, 32.0, 87.3, 1.092, 4.8, 46.62, 1.51], ["Set 2023", 115.7, 118.55, 128.08, 105.99, 0.39268, false, 94.0, 36.1, 34.8, 84.8, 1.0672, 4.7, 46.62, 1.51], ["Ott 2023", 134.26, 144.56, 148.63, 119.08, 0.467879, false, 90.8, 46.2, 44.9, 82.0, 1.0566, 4.85, 46.62, 1.51], ["Nov 2023", 121.74, 139.73, 128.26, 105.3, 0.45073, false, 82.9, 45.5, 44.2, 77.1, 1.0881, 5.1, 46.62, 1.51], ["Dic 2023", 115.46, 131.87, 118.69, 105.36, 0.38487, false, 77.1, 36.3, 35.0, 72.5, 1.0909, 6.2, 46.62, 1.51], ["Gen 2024", 99.16, 109.65, 105.07, 89.06, 0.3306, false, 80.1, 30.4, 29.2, 68.5, 1.0874, 7.4, 44.9, 2.767], ["Feb 2024", 87.63, 96.15, 94.92, 76.81, 0.29495, false, 83.5, 26.5, 25.3, 58.7, 1.078, 8.85, 44.9, 2.767], ["Mar 2024", 88.86, 94.93, 94.62, 81.32, 0.30459, false, 85.4, 27.5, 26.4, 61.7, 1.0875, 6.4, 44.9, 2.767], ["Apr 2024", 86.8, 85.57, 101.29, 80.54, 0.32317, false, 89.9, 28.9, 27.7, 68.5, 1.0722, 5.95, 44.9, 2.767], ["Mag 2024", 94.88, 94.66, 111.48, 86.24, 0.34968, false, 82.0, 31.8, 30.5, 72.8, 1.0815, 5.8, 44.9, 2.767], ["Giu 2024", 103.17, 103.81, 116.16, 95.43, 0.38235, false, 82.3, 34.2, 32.9, 67.8, 1.076, 5.95, 44.9, 2.767], ["Lug 2024", 112.32, 108.67, 130.63, 104.78, 0.37504, false, 85.1, 33.0, 31.6, 67.5, 1.0835, 8.5, 44.9, 2.767], ["Ago 2024", 128.44, 121.67, 147.95, 122.19, 0.42952, false, 78.9, 37.8, 36.3, 68.4, 1.1015, 6.1, 44.9, 2.767], ["Set 2024", 117.13, 122.33, 131.74, 105.65, 0.41119, false, 73.5, 36.2, 34.7, 64.0, 1.1118, 5.95, 44.9, 2.767], ["Ott 2024", 116.69, 123.78, 126.63, 105.27, 0.43269, false, 74.9, 39.1, 37.5, 64.5, 1.0876, 6.1, 44.9, 2.767], ["Nov 2024", 130.89, 145.59, 137.38, 117.13, 0.47799, false, 74.6, 44.6, 43.0, 66.5, 1.0597, 6.45, 44.9, 2.767], ["Dic 2024", 135.06, 158.47, 145.93, 115.81, 0.50417, false, 74.0, 43.9, 42.3, 71.8, 1.0476, 7.65, 44.9, 2.767], ["Gen 2025", 143.03, 158.32, 151.61, 128.54, 0.52808, false, 78.5, 49.2, 47.4, 77.5, 1.0387, 11.4, 59.05, 3.35], ["Feb 2025", 150.36, 157.64, 158.95, 139.91, 0.56059, false, 75.5, 50.5, 48.6, 73.9, 1.0412, 13.2, 59.05, 3.35], ["Mar 2025", 120.55, 121.68, 134.86, 111.65, 0.45046, false, 72.4, 41.1, 39.4, 70.5, 1.0815, 7.8, 59.05, 3.35], ["Apr 2025", 99.85, 95.84, 115.08, 95.05, 0.39835, false, 67.9, 35.0, 33.4, 68.2, 1.107, 6.6, 59.05, 3.35], ["Mag 2025", 93.58, 89.09, 110.64, 87.11, 0.40399, false, 65.0, 34.3, 32.8, 68.0, 1.1276, 6.45, 59.05, 3.35], ["Giu 2025", 111.78, 113.06, 126.76, 103.63, 0.39971, false, 72.8, 34.8, 33.3, 71.9, 1.1423, 7.1, 59.05, 3.35], ["Lug 2025", 113.13, 108.96, 127.1, 108.49, 0.38852, false, 68.9, 33.5, 32.0, 72.3, 1.1681, 12.6, 59.05, 3.35], ["Ago 2025", 108.79, 105.58, 117.97, 106.04, 0.37718, false, 67.5, 31.8, 30.4, 73.0, 1.165, 6.8, 59.05, 3.35], ["Set 2025", 109.08, 109.59, 120.93, 101.88, 0.36952, false, 66.9, 31.5, 30.1, 74.1, 1.1754, 6.65, 59.05, 3.35], ["Ott 2025", 111.04, 117.83, 121.66, 99.48, 0.353959, false, 64.0, 31.2, 29.8, 76.2, 1.1615, 6.8, 59.05, 3.35], ["Nov 2025", 117.09, 129.59, 124.02, 105.51, 0.3453, false, 63.5, 32.1, 30.7, 74.8, 1.1553, 7.2, 59.05, 3.35], ["Dic 2025", 115.49, 130.09, 119.98, 104.52, 0.32467, false, 69.0, 31.3, 29.9, 73.4, 1.1432, 8.95, 59.05, 3.35], ["Gen 2026", 132.66, 151.26, 137.41, 118.29, 0.404227, false, 78.0, 38.2, 37.9, 78.0, 1.0483, 13.1, 61.2, 4.2], ["Feb 2026", 114.41, 122.28, 119.84, 105.3, 0.377233, false, 72.5, 35.1, 35.1, 76.2, 1.062, 14.85, 61.2, 4.2], ["Mar 2026", 143.4, 143.02, 153.91, 138.0, 0.561332, false, 96.5, 52.1, 51.3, 75.0, 1.073, 8.9, 61.2, 4.2], ["Mag 2026", 143.4, 143.02, 153.91, 138.0, 0.561332, true, 108.13, 45.0, 51.3, 75.0, 1.1702, 8.9, 61.2, 4.2]];
+const C = 0.0105833;
+
+let currentPeriod="all", activeSeries=new Set(["f0","psv","brent"]);
+let chMain=null, chBar=null, chBrent=null, chTTF=null, chDISP=null;
+const tc=()=>"#e6edf3", gc=()=>"rgba(139,148,158,0.12)", tb=()=>"rgba(13,17,23,0.95)";
+const yr=l=>parseInt(l.match(/\d{4}/)[0]);
+const fmt=(n,d=2)=>n==null||isNaN(n)?"—":n.toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtSmc=n=>n==null||isNaN(n)?"—":n.toLocaleString("it-IT",{minimumFractionDigits:4,maximumFractionDigits:4});
+
+function filterData(p){
+  if(p==="all")return D.slice();
+  if(p==="12m")return D.slice(-12);
+  if(p==="24m")return D.slice(-24);
+  return D.filter(r=>yr(r[0])===parseInt(p));
+}
+
+function updateCards(){
+  const rows=filterData(currentPeriod), full=rows.filter(r=>!r[6]);
+  if(!full.length)return;
+  const last=rows[rows.length-1], partial=last[6], mark=partial?" ⚡":"";
+  const pArr=full.map(r=>r[1]), gArr=full.map(r=>r[5]);
+  document.getElementById("pL").textContent=fmt(last[1])+mark;
+  document.getElementById("pLm").textContent=`${last[0]} · ${fmt(last[1]/1000,4)} €/kWh`;
+  const pMax=Math.max(...pArr), pMin=Math.min(...pArr);
+  document.getElementById("pX").textContent=fmt(pMax);
+  document.getElementById("pXm").textContent=full[pArr.indexOf(pMax)][0];
+  document.getElementById("pN").textContent=fmt(pMin);
+  document.getElementById("pNm").textContent=full[pArr.indexOf(pMin)][0];
+  document.getElementById("pA").textContent=fmt(pArr.reduce((s,v)=>s+v,0)/pArr.length);
+  document.getElementById("gL").textContent=fmtSmc(last[5])+mark;
+  document.getElementById("gLm").textContent=`${last[0]} · ${fmt(last[5]/C)} €/MWh`;
+  const gMax=Math.max(...gArr), gMin=Math.min(...gArr);
+  document.getElementById("gX").textContent=fmtSmc(gMax);
+  document.getElementById("gXm").textContent=full[gArr.indexOf(gMax)][0];
+  document.getElementById("gN").textContent=fmtSmc(gMin);
+  document.getElementById("gNm").textContent=full[gArr.indexOf(gMin)][0];
+  document.getElementById("gA").textContent=fmtSmc(gArr.reduce((s,v)=>s+v,0)/gArr.length);
+  document.getElementById("bL").textContent=fmt(last[7])+mark;
+  document.getElementById("tL").textContent=fmt(last[8])+mark;
+  document.getElementById("iL").textContent=fmt(last[9])+mark;
+  document.getElementById("cL").textContent=fmt(last[10])+mark;
+  document.getElementById("fL").textContent=fmt(last[11],4)+mark;
+  document.getElementById("dL").textContent=fmt(last[12])+mark;
+  document.getElementById("dLm").textContent=`peak ${fmt(last[13])} €/MWh`;
+  document.getElementById("pK").textContent=fmt(last[1]/1000,4)+mark;
+}
+
+async function updateTickers(){
+  const last=D[D.length-1];
+  document.getElementById("tkPUN").textContent=fmt(last[1])+" €/MWh";
+  document.getElementById("tkPSV").textContent=fmtSmc(last[5])+" €/Smc";
+  document.getElementById("tkTTF").textContent=fmt(last[8])+" €/MWh";
+  document.getElementById("tkCO2").textContent=fmt(last[10])+" €/t";
+  document.getElementById("tkBrent").textContent=fmt(last[7])+" $/bbl";
+  document.getElementById("tkFX").textContent=fmt(last[11],4);
+  document.getElementById("tkDISP").textContent=fmt(last[12])+" €/MWh";
+  try{
+    const r=await fetch("https://api.frankfurter.app/latest?from=EUR&to=USD");
+    if(r.ok){const j=await r.json();if(j.rates&&j.rates.USD){
+      document.getElementById("tkFX").textContent=fmt(j.rates.USD,4)+" LIVE";
+      document.getElementById("fL").textContent=fmt(j.rates.USD,4);}}
+  }catch(e){}
+}
+
+function buildMainChart(){
+  const rows=filterData(currentPeriod), labels=rows.map(r=>r[0]);
+  const sd={
+    f0:{l:"PUN F0",d:rows.map(r=>r[1]),c:"#d4763a",a:"yL"},
+    f1:{l:"F1",d:rows.map(r=>r[2]),c:"#e8a34f",a:"yL",h:[4,2]},
+    f2:{l:"F2",d:rows.map(r=>r[3]),c:"#f5c788",a:"yL",h:[4,2]},
+    f3:{l:"F3",d:rows.map(r=>r[4]),c:"#f9dfb9",a:"yL",h:[4,2]},
+    psv:{l:"PSV",d:rows.map(r=>r[5]),c:"#2b7ecb",a:"yR"},
+    brent:{l:"Brent",d:rows.map(r=>r[7]),c:"#c0392b",a:"yB"},
+    ttf:{l:"TTF",d:rows.map(r=>r[8]),c:"#8e44ad",a:"yL"},
+    igi:{l:"IGI",d:rows.map(r=>r[9]),c:"#16a085",a:"yL"},
+    co2:{l:"CO₂",d:rows.map(r=>r[10]),c:"#27ae60",a:"yL"},
+    fx:{l:"EUR/USD",d:rows.map(r=>r[11]),c:"#c7a800",a:"yF"},
+    disp:{l:"DISP",d:rows.map(r=>r[12]),c:"#e74c3c",a:"yD"}
+  };
+  const ds=[];
+  ["f0","f1","f2","f3","psv","brent","ttf","igi","co2","fx","disp"].forEach(k=>{
+    if(!activeSeries.has(k))return;
+    const s=sd[k];
+    ds.push({label:s.l,data:s.d,borderColor:s.c,backgroundColor:s.c+"26",borderWidth:2,tension:0.3,
+      pointRadius:rows.map(r=>r[6]?5:2),pointBackgroundColor:rows.map(r=>r[6]?"#fff":s.c),
+      pointBorderColor:s.c,pointBorderWidth:2,borderDash:s.h||[],yAxisID:s.a,fill:k==="f0"||k==="psv"});
+  });
+  if(chMain)chMain.destroy();
+  chMain=new Chart(document.getElementById("chMain"),{type:"line",data:{labels,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{labels:{color:tc(),font:{size:11},boxWidth:14,padding:6}},
+        tooltip:{backgroundColor:tb(),titleColor:"#e6edf3",bodyColor:tc()}},
+      scales:{
+        x:{ticks:{color:tc(),font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:20},grid:{color:gc()}},
+        yL:{type:"linear",position:"left",ticks:{color:"#d4763a",font:{size:10}},grid:{color:gc()}},
+        yR:{type:"linear",position:"right",display:activeSeries.has("psv"),ticks:{color:"#2b7ecb",font:{size:10}},grid:{drawOnChartArea:false}},
+        yB:{type:"linear",position:"right",display:activeSeries.has("brent"),offset:activeSeries.has("psv"),ticks:{color:"#c0392b",font:{size:10}},grid:{drawOnChartArea:false}},
+        yF:{type:"linear",position:"right",display:activeSeries.has("fx"),offset:true,ticks:{color:"#c7a800",font:{size:10}},grid:{drawOnChartArea:false}},
+        yD:{type:"linear",position:"right",display:activeSeries.has("disp"),offset:true,ticks:{color:"#e74c3c",font:{size:10}},grid:{drawOnChartArea:false}}
+      }}});
+}
+
+function buildBarChart(){
+  const YY=["2022","2023","2024","2025","2026"], pm=[],gm=[],dm=[],pM=[false,false,false,false,false];
+  YY.forEach((y,i)=>{
+    const rows=D.filter(r=>yr(r[0])===+y), fl=rows.filter(r=>!r[6]);
+    pM[i]=rows.some(r=>r[6]);
+    if(!fl.length){pm.push(0);gm.push(0);dm.push(0);return;}
+    pm.push(fl.reduce((a,r)=>a+r[1],0)/fl.length);
+    gm.push(fl.reduce((a,r)=>a+r[5]/C,0)/fl.length);
+    dm.push(fl.reduce((a,r)=>a+r[12],0)/fl.length);
+  });
+  if(chBar)chBar.destroy();
+  chBar=new Chart(document.getElementById("chBar"),{type:"bar",
+    data:{labels:YY.map((y,i)=>y+(pM[i]?" ⚡":"")),datasets:[
+      {label:"PUN",data:pm,backgroundColor:"rgba(212,118,58,.7)",borderColor:"#d4763a",borderWidth:1,borderRadius:4},
+      {label:"PSV €/MWh",data:gm,backgroundColor:"rgba(43,126,203,.6)",borderColor:"#2b7ecb",borderWidth:1,borderRadius:4},
+      {label:"DISP",data:dm,backgroundColor:"rgba(231,76,60,.6)",borderColor:"#e74c3c",borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:tc(),font:{size:10}}}},
+      scales:{x:{ticks:{color:tc()},grid:{color:gc()}},y:{ticks:{color:tc()},grid:{color:gc()}}}}});
+}
+
+function buildSubCharts(){
+  const rows=filterData(currentPeriod), labels=rows.map(r=>r[0]);
+  if(chBrent)chBrent.destroy();
+  chBrent=new Chart(document.getElementById("chBrent"),{type:"line",
+    data:{labels,datasets:[{label:"Brent",data:rows.map(r=>r[7]),borderColor:"#c0392b",
+      backgroundColor:"rgba(192,57,43,.15)",fill:true,tension:0.3,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:tc(),font:{size:9},autoSkip:true,maxTicksLimit:14},grid:{color:gc()}},
+        y:{ticks:{color:tc(),font:{size:10}},grid:{color:gc()}}}}});
+  if(chTTF)chTTF.destroy();
+  chTTF=new Chart(document.getElementById("chTTF"),{type:"line",
+    data:{labels,datasets:[
+      {label:"TTF",data:rows.map(r=>r[8]),borderColor:"#8e44ad",backgroundColor:"rgba(142,68,173,.15)",fill:true,tension:0.3,borderWidth:2,yAxisID:"yL"},
+      {label:"CO₂",data:rows.map(r=>r[10]),borderColor:"#27ae60",tension:0.3,borderWidth:2,yAxisID:"yR"}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc(),font:{size:10}}}},
+      scales:{x:{ticks:{color:tc(),font:{size:9},autoSkip:true,maxTicksLimit:14},grid:{color:gc()}},
+        yL:{position:"left",ticks:{color:"#8e44ad",font:{size:10}},grid:{color:gc()}},
+        yR:{position:"right",ticks:{color:"#27ae60",font:{size:10}},grid:{drawOnChartArea:false}}}}});
+  if(chDISP)chDISP.destroy();
+  chDISP=new Chart(document.getElementById("chDISP"),{type:"bar",
+    data:{labels,datasets:[
+      {type:"line",label:"DISP medio",data:rows.map(r=>r[12]),borderColor:"#e74c3c",
+        backgroundColor:"rgba(231,76,60,.15)",fill:true,tension:0.3,borderWidth:2.5,yAxisID:"yL",order:1},
+      {type:"bar",label:"CM peak",data:rows.map(r=>r[13]),backgroundColor:"rgba(231,76,60,.35)",borderColor:"#e74c3c",borderWidth:1,yAxisID:"yR",order:2,borderRadius:2},
+      {type:"bar",label:"CM off-peak",data:rows.map(r=>r[14]),backgroundColor:"rgba(231,76,60,.15)",borderColor:"#e74c3c",borderWidth:1,yAxisID:"yL",order:3,borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{labels:{color:tc(),font:{size:11}}}},
+      scales:{x:{ticks:{color:tc(),font:{size:9},autoSkip:true,maxTicksLimit:18},grid:{color:gc()}},
+        yL:{position:"left",ticks:{color:"#e74c3c",font:{size:10}},grid:{color:gc()}},
+        yR:{position:"right",ticks:{color:"#e74c3c",font:{size:10}},grid:{drawOnChartArea:false}}}}});
+}
+
+function renderTables(){
+  const rows=filterData(currentPeriod).slice().reverse();
+  const pool=rows.filter(r=>!r[6]);
+  const pMax=Math.max(...pool.map(r=>r[1])), pMin=Math.min(...pool.map(r=>r[1]));
+  const gMax=Math.max(...pool.map(r=>r[5])), gMin=Math.min(...pool.map(r=>r[5]));
+  const dMax=Math.max(...pool.map(r=>r[12])), dMin=Math.min(...pool.map(r=>r[12]));
+  const asc=filterData(currentPeriod);
+  const cls=(r,k,mx,mn)=>r[6]?"rpartial":r[k]===mx?"rx":r[k]===mn?"rn":"";
+  const dpct=(c,p)=>(!p||!c)?"—":`<span style="color:${(c-p)>=0?'#f85149':'#3fb950'}">${(c-p)>=0?'+':''}${((c-p)/p*100).toFixed(1)}%</span>`;
+  document.getElementById("tbAll").innerHTML=rows.map(r=>{
+    const idx=asc.findIndex(x=>x[0]===r[0]),pp=idx>0?asc[idx-1][1]:null,pg=idx>0?asc[idx-1][5]:null;
+    const c=r[6]?"rpartial":(r[1]===pMax||r[5]===gMax)?"rx":(r[1]===pMin||r[5]===gMin)?"rn":"";
+    return `<tr class="${c}"><td>${r[6]?"⚡ ":""}<strong>${r[0]}</strong></td><td class="num">${fmt(r[1]/1000,5)}</td><td class="num">${fmt(r[1])}</td><td class="num">${fmtSmc(r[5])}</td><td class="num">${fmt(r[5]/C)}</td><td class="num">${dpct(r[1],pp)}</td><td class="num">${dpct(r[5],pg)}</td></tr>`;
+  }).join("");
+  document.getElementById("tbPUN").innerHTML=rows.map(r=>{
+    const idx=asc.findIndex(x=>x[0]===r[0]),pp=idx>0?asc[idx-1][1]:null;
+    return `<tr class="${cls(r,1,pMax,pMin)}"><td>${r[6]?"⚡ ":""}<strong>${r[0]}</strong></td><td class="num">${fmt(r[1]/1000,5)}</td><td class="num">${fmt(r[2]/1000,5)}</td><td class="num">${fmt(r[3]/1000,5)}</td><td class="num">${fmt(r[4]/1000,5)}</td><td class="num">${fmt(r[1])}</td><td class="num">${dpct(r[1],pp)}</td></tr>`;
+  }).join("");
+  document.getElementById("tbPSV").innerHTML=rows.map(r=>{
+    const idx=asc.findIndex(x=>x[0]===r[0]),pg=idx>0?asc[idx-1][5]:null;
+    const dd=pg?(r[5]-pg).toFixed(4):"—", ddSign=pg&&(r[5]-pg)>=0?"+":"";
+    return `<tr class="${cls(r,5,gMax,gMin)}"><td>${r[6]?"⚡ ":""}<strong>${r[0]}</strong></td><td class="num">${fmtSmc(r[5])}</td><td class="num">${fmt(r[5]/C)}</td><td class="num">${pg?ddSign+dd:"—"}</td><td class="num">${dpct(r[5],pg)}</td></tr>`;
+  }).join("");
+  document.getElementById("tbOther").innerHTML=rows.map(r=>
+    `<tr class="${r[6]?"rpartial":""}"><td>${r[6]?"⚡ ":""}<strong>${r[0]}</strong></td><td class="num">${fmt(r[7])}</td><td class="num">${fmt(r[8])}</td><td class="num">${fmt(r[9])}</td><td class="num">${fmt(r[10])}</td><td class="num">${fmt(r[11],4)}</td></tr>`).join("");
+  document.getElementById("tbDISP").innerHTML=rows.map(r=>{
+    const idx=asc.findIndex(x=>x[0]===r[0]),pd=idx>0?asc[idx-1][12]:null;
+    return `<tr class="${cls(r,12,dMax,dMin)}"><td>${r[6]?"⚡ ":""}<strong>${r[0]}</strong></td><td class="num">${fmt(r[12])}</td><td class="num">${fmt(r[13],3)}</td><td class="num">${fmt(r[14],3)}</td><td class="num">${dpct(r[12],pd)}</td></tr>`;
+  }).join("");
+}
+
+function exportCSV(){
+  const rows=filterData(currentPeriod);
+  let csv="Mese;PUN €/kWh;PUN €/MWh;F1;F2;F3;PSV €/Smc;PSV €/MWh;Brent;TTF;IGI;CO2;EUR/USD;DISP;CM peak;CM off-peak;Parziale\n";
+  rows.forEach(r=>{
+    csv+=`${r[0]};${(r[1]/1000).toFixed(5)};${r[1]};${(r[2]/1000).toFixed(5)};${(r[3]/1000).toFixed(5)};${(r[4]/1000).toFixed(5)};${r[5].toFixed(6)};${(r[5]/C).toFixed(2)};${r[7]};${r[8]};${r[9]};${r[10]};${r[11]};${r[12]};${r[13]};${r[14]};${r[6]?"⚡":""}\n`;
+  });
+  const b=new Blob(["\uFEFF"+csv],{type:"text/csv"}), u=URL.createObjectURL(b), a=document.createElement("a");
+  a.href=u; a.download=`EnergyDashboard_${currentPeriod}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  URL.revokeObjectURL(u);
+}
+
+function render(){updateCards();renderTables();if(typeof Chart!=="undefined"){buildMainChart();buildBarChart();buildSubCharts();}}
+document.querySelectorAll(".ctrls button[data-p]").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".ctrls button[data-p]").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); currentPeriod=b.dataset.p; render();
+}));
+document.querySelectorAll(".ftrow button[data-f]").forEach(b=>b.addEventListener("click",()=>{
+  const k=b.dataset.f;
+  if(activeSeries.has(k)){activeSeries.delete(k);b.classList.remove("on");}
+  else{activeSeries.add(k);b.classList.add("on");}
+  buildMainChart();
+}));
+document.querySelectorAll(".tabb").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabb").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".tpanel").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); document.getElementById(b.dataset.t).classList.add("on");
+}));
+document.getElementById("csvBtn").addEventListener("click",exportCSV);
+document.addEventListener("DOMContentLoaded",()=>{render();updateTickers();setInterval(updateTickers,60000);});
+</script>
+</body>
+</html>
