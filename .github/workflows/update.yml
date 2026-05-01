@@ -1,0 +1,61 @@
+name: Update Energy Dashboard
+
+on:
+  schedule:
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'template/**'
+      - 'scripts/**'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 yfinance lxml
+
+      - name: Run dashboard updater
+        run: python scripts/update_dashboard.py
+        env:
+          TZ: Europe/Rome
+
+      - name: Commit aggiornamento
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions Bot"
+          git add public/index.html cache/history.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "Nessuna modifica, skip commit."
+          else
+            git commit -m "🤖 Auto-update dashboard $(date +'%d/%m/%Y')"
+            git push
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+      - name: Deploy su GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
