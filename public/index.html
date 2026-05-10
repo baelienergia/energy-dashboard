@@ -5,7 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Energy Dashboard — Baeli Energia</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<style>
+<style> 
+th, td {
+  vertical-align: middle;
+}
+
+th:first-child, td:first-child {
+  text-align: left;
+}
+
+th:not(:first-child), td:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 :root{
   --bg:#0d1117;--sur:#161b22;--brd:#30363d;--txt:#e6edf3;--mut:#8b949e;
   --pun:#d4763a;--psv:#2b7ecb;--oil:#c0392b;--ttf:#8e44ad;--igi:#16a085;--co2:#27ae60;--fx:#c7a800;--disp:#e74c3c;
